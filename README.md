@@ -1,8 +1,8 @@
 # blindvisaidgpt
-An interactive aid for blind people using microsoft/visual-chatgpt 
+An interactive aid for blind people using microsoft/visual-chatgpt\
+#### (Originally started motivated by [Deep Hack](https://hasgeek.com/generativeAI/deep-hackathon/?utm_campaign=webshare) initiative)
 
 
-<br>
 <br>
 
 ## Quick Start
