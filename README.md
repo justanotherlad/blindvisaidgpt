@@ -10,7 +10,7 @@ An interactive aid for blind people using microsoft/visual-chatgpt
 
 ```
 # clone the repo
-git clone https://github.com/justanotherlad/blindvisaidgpt.git
+git clone git@github.com:justanotherlad/blindvisaidgpt.git
 
 # Go to directory
 cd blindvisaidgpt
