@@ -27,3 +27,4 @@ torchmetrics
 transformers
 webdataset
 yapf
+pyttsx3
