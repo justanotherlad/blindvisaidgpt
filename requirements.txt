@@ -28,3 +28,6 @@ transformers
 webdataset
 yapf
 pyttsx3
+SpeechRecognition
+pyaudio
+
