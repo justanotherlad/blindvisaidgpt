@@ -3,10 +3,17 @@ An interactive aid for blind people using microsoft/visual-chatgpt
 #### (Originally motivated as a potential [Deep Hack](https://hasgeek.com/generativeAI/deep-hackathon/?utm_campaign=webshare) submission)
 
 
+### Demo
+
+
+https://user-images.githubusercontent.com/31207633/227807355-202886ab-3b41-41c3-be99-8be486ae9489.mp4
+
+
+
 <br>
 
 ## Quick Start
-### (similar to microsoft/visual-chatgpt)
+### (akin to setting up microsoft/visual-chatgpt)
 
 ```
 # clone the repo
@@ -35,16 +42,16 @@ set OPENAI_API_KEY={Your_Private_Openai_Key}
 # Visual Foundation Model to use and where it will be loaded to
 # The model and device are separated by underline '_', the different models are separated by comma ','
 # The available Visual Foundation Models can be found in the following table
-# For example, if you want to load ImageCaptioning to cpu and Text2Image to cuda:0
-# You can use: "ImageCaptioning_cpu,Text2Image_cuda:0"
+# For example, if you want to load ImageCaptioning to cpu and VisualQuestionAnswering to cuda:0
+# You can use: "ImageCaptioning_cpu,VisualQuestionAnswering_cuda:0"
 
-# Advice for CPU Users
-python visual_chatgpt.py --load ImageCaptioning_cpu,Text2Image_cpu
+# Advice for CPU Users (current default)
+python visual_chatgpt.py --load ImageCaptioning_cpu,VisualQuestionAnswering_cpu
 
-# Advice for 1 Tesla T4 15GB  (Google Colab)                       
-python visual_chatgpt.py --load "ImageCaptioning_cuda:0,Text2Image_cuda:0"
+# Advice for 1 Tesla T4 15GB  (Google Colab)  --(feature yet to be tried)                       
+python visual_chatgpt.py --load "ImageCaptioning_cuda:0,VisualQuestionAnswering_cuda:0"
                                 
-# Advice for 4 Tesla V100 32GB                            
+# Advice for 4 Tesla V100 32GB  --(feature yet to be tried)                        
 python visual_chatgpt.py --load "ImageCaptioning_cuda:0,ImageEditing_cuda:0,
     Text2Image_cuda:1,Image2Canny_cpu,CannyText2Image_cuda:1,
     Image2Depth_cpu,DepthText2Image_cuda:1,VisualQuestionAnswering_cuda:2,
