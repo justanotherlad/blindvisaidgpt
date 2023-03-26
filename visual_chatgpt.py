@@ -10,6 +10,12 @@ import numpy as np
 import argparse
 import pyttsx3
 import time
+import speech_recognition as sr
+import pyaudio
+import wave
+import warnings
+
+warnings.filterwarnings("ignore")
 
 
 from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
@@ -121,6 +127,91 @@ def get_new_image_name(org_img_name, func_name="update"):
     recent_prev_file_name = name_split[0]
     new_file_name = f'{this_new_uuid}_{func_name}_{recent_prev_file_name}_{most_org_file_name}.png'
     return os.path.join(head, new_file_name)
+
+
+def capture_image():
+    """
+    Captures an image from the connected camera
+    Returns: cv2 image
+    """
+    # use cv2 library to capture an image from the camera
+    
+    # set the camera index for cv2 based on the bus and device number
+    camera_index = 0
+    
+    # initialize the cv2 camera object
+    cap = cv2.VideoCapture(camera_index)
+
+    # set the width and height of the captured image
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+    # capture an image
+    ret, img = cap.read()
+
+    # release the camera object and return the captured image
+    cap.release()
+    return img
+
+
+
+def record_audio_to_file(file_path, duration_seconds):
+    # set parameters for audio recording
+    chunk = 1024  # number of frames per buffer
+    sample_format = pyaudio.paInt16  # 16 bits per sample
+    channels = 1  # mono audio
+    sample_rate = 44100  # samples per second
+    
+    # create a PyAudio object
+    p = pyaudio.PyAudio()
+    
+    # open a new stream for recording
+    stream = p.open(format=sample_format,
+                    channels=channels,
+                    rate=sample_rate,
+                    frames_per_buffer=chunk,
+                    input=True)
+    
+    # create a buffer to store audio data
+    frames = []
+    
+    # record audio data for the specified duration
+    for i in range(0, int(sample_rate / chunk * duration_seconds)):
+        data = stream.read(chunk)
+        frames.append(data)
+    
+    # stop recording and close the stream
+    stream.stop_stream()
+    stream.close()
+    
+    # terminate the PyAudio object
+    p.terminate()
+    
+    # write the audio data to a file
+    wf = wave.open(file_path, 'wb')
+    wf.setnchannels(channels)
+    wf.setsampwidth(p.get_sample_size(sample_format))
+    wf.setframerate(sample_rate)
+    wf.writeframes(b''.join(frames))
+    wf.close()
+
+
+
+def transcribe_audio_file(audio_file_path):
+    r = sr.Recognizer()
+    with sr.AudioFile(audio_file_path) as source:
+        audio_data = r.record(source)
+    try:
+        text = r.recognize_google(audio_data)
+        # check if the text is empty or contains only whitespace characters
+        if text and not text.isspace():
+            return text
+        else:
+            return None
+    except sr.UnknownValueError:
+        return None
+
+
 
 
 class MaskFormer:
@@ -879,6 +970,9 @@ class ConversationBot:
         description = self.models['ImageCaptioning'].inference(image_filename)
         Human_prompt = f'\nHuman: provide a figure named {image_filename}. The description is: {description}. This information helps you to understand this image, but you should use tools to finish following tasks, rather than directly imagine from my description. If you understand, say \"Received\". \n'
         AI_prompt = "Received.  "
+        engine = pyttsx3.init()
+        engine.say("The last image is of"+str(description))
+        engine.runAndWait()
         self.agent.memory.buffer = self.agent.memory.buffer + Human_prompt + 'AI: ' + AI_prompt
         state = state + [(f"![](/file={image_filename})*{image_filename}*", AI_prompt)]
         print(f"\nProcessed run_image, Input image: {image_filename}\nCurrent state: {state}\n"
@@ -915,16 +1009,27 @@ if __name__ == '__main__':
     """
     def run_image_multiple_times(bot):
         state = []
-        txt = "Describe the last image in details without giving any information about the file name."
-        txt1 = "";
-        directory = "image_source/kaggle_phsophea101_imageforstitching/"  # Replace with the directory path containing images
-        image_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith((".png",".jpg",".jpeg"))]  # Replace ".png" with the file extension of your images
-        for i, image_file in enumerate(image_files):
+        txt = "Describe the provided figure."
+        for i in range(0,12):
+            img = capture_image()
+            timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+            filename = f"{timestamp}.jpg"
+            cv2.imwrite(os.path.join("/home/justanotherlad/Desktop/blindvisaidgpt/image_source/iPhone_captures", filename), img)
+            directory = "/home/justanotherlad/Desktop/blindvisaidgpt/image_source/iPhone_captures"  # Replace with the directory path containing images
+            image_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith((".png",".jpg",".jpeg"))]  # Replace ".png" with the file extension of your images
+            sorted_image_files = sorted(image_files, reverse=True)
+            image_file = sorted_image_files[0]  # Keep only the last image
             with open(image_file, "rb") as image:
                 image = open(image_file, "rb")
                 _, state, txt = bot.run_image(image, state, txt)
                 #print(f"Processed 1 image, Current state: {state}\nCurrent Memory: {bot.agent.memory.buffer}\n")
-                bot.run_text(txt, state)
+                #bot.run_text(txt, state)
+                record_audio_to_file("/home/justanotherlad/Desktop/blindvisaidgpt/question_source/file1.wav", 5)
+                text = transcribe_audio_file("/home/justanotherlad/Desktop/blindvisaidgpt/question_source/file1.wav")
+                if text!=None:
+                    bot.run_text(text, state)
+
+
 
     run_image_multiple_times(bot)
 
