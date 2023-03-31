@@ -10,7 +10,8 @@ import numpy as np
 import argparse
 import pyttsx3
 import time
-import speech_recognition as sr
+#import speech_recognition as sr
+import whisper
 import pyaudio
 import wave
 import warnings
@@ -129,6 +130,7 @@ def get_new_image_name(org_img_name, func_name="update"):
     return os.path.join(head, new_file_name)
 
     
+
 def automatic_brightness_and_contrast(image, clip_hist_percent=0.5):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
@@ -172,6 +174,9 @@ def automatic_brightness_and_contrast(image, clip_hist_percent=0.5):
 
     auto_result = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
     return auto_result
+
+
+
     
 def capture_image():
     """
@@ -244,7 +249,7 @@ def record_audio_to_file(file_path, duration_seconds):
     wf.close()
 
 
-
+"""
 def transcribe_audio_file(audio_file_path):
     r = sr.Recognizer()
     with sr.AudioFile(audio_file_path) as source:
@@ -258,6 +263,7 @@ def transcribe_audio_file(audio_file_path):
             return None
     except sr.UnknownValueError:
         return None
+"""
 
 
 
@@ -1076,9 +1082,11 @@ if __name__ == '__main__':
                 #print(f"Processed 1 image, Current state: {state}\nCurrent Memory: {bot.agent.memory.buffer}\n")
                 #bot.run_text(txt, state)
                 record_audio_to_file(os.path.join(curr_directory, "question_source/file1.wav"), 5)
-                text = transcribe_audio_file(os.path.join(curr_directory, "question_source/file1.wav"))
-                if text!=None:
-                    bot.run_text(text, state)
+                #text = transcribe_audio_file(os.path.join(curr_directory, "question_source/file1.wav"))
+                model = whisper.load_model("tiny")
+                result = model.transcribe(os.path.join(curr_directory, "question_source/file1.wav"))
+                if result["text"] != "" and "thank you" not in result["text"].lower():
+                    bot.run_text(result["text"], state)
 
 
 

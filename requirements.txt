@@ -30,4 +30,9 @@ yapf
 pyttsx3
 SpeechRecognition
 pyaudio
+openai-whisper
+ffmpeg
+
+
+
 
