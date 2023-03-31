@@ -128,7 +128,51 @@ def get_new_image_name(org_img_name, func_name="update"):
     new_file_name = f'{this_new_uuid}_{func_name}_{recent_prev_file_name}_{most_org_file_name}.png'
     return os.path.join(head, new_file_name)
 
+    
+def automatic_brightness_and_contrast(image, clip_hist_percent=0.5):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    # Calculate grayscale histogram
+    hist = cv2.calcHist([gray],[0],None,[256],[0,256])
+    hist_size = len(hist)
+    
+    # Calculate cumulative distribution from the histogram
+    accumulator = []
+    accumulator.append(float(hist[0]))
+    for index in range(1, hist_size):
+        accumulator.append(accumulator[index -1] + float(hist[index]))
+    
+    # Locate points to clip
+    maximum = accumulator[-1]
+    clip_hist_percent *= (maximum/100.0)
+    clip_hist_percent /= 2.0
+    
+    # Locate left cut
+    minimum_gray = 0
+    while accumulator[minimum_gray] < clip_hist_percent:
+        minimum_gray += 1
+    
+    # Locate right cut
+    maximum_gray = hist_size -1
+    while accumulator[maximum_gray] >= (maximum - clip_hist_percent):
+        maximum_gray -= 1
+    
+    # Calculate alpha and beta values
+    alpha = 255 / (maximum_gray - minimum_gray)
+    beta = -minimum_gray * alpha
+    
+    '''
+    # Calculate new histogram with desired range and show histogram
+    new_hist = cv2.calcHist([gray],[0],None,[256],[minimum_gray,maximum_gray])
+    plt.plot(hist)
+    plt.plot(new_hist)
+    plt.xlim([0,256])
+    plt.show()
+    '''
 
+    auto_result = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
+    return auto_result
+    
 def capture_image():
     """
     Captures an image from the connected camera
@@ -137,6 +181,7 @@ def capture_image():
     # use cv2 library to capture an image from the camera
     
     # set the camera index for cv2 based on the bus and device number
+    
     camera_index = 0
     
     # initialize the cv2 camera object
@@ -145,12 +190,15 @@ def capture_image():
     # set the width and height of the captured image
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
+#    cap.set(cv2.CAP_PROP_EXPOSURE, 0.1)
+#    cap.set(cv2.CAP_PROP_BRIGHTNESS, 0.5)
     # capture an image
     ret, img = cap.read()
-
+    if img is not None:
+        img = automatic_brightness_and_contrast(img)
     # release the camera object and return the captured image
     cap.release()
+   
     return img
 
 
@@ -1010,12 +1058,15 @@ if __name__ == '__main__':
     def run_image_multiple_times(bot):
         state = []
         txt = "Describe the provided figure."
+        curr_directory = os.getcwd()
         for i in range(0,12):
             img = capture_image()
             timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
             filename = f"{timestamp}.jpg"
-            cv2.imwrite(os.path.join("/home/justanotherlad/Desktop/blindvisaidgpt/image_source/iPhone_captures", filename), img)
-            directory = "/home/justanotherlad/Desktop/blindvisaidgpt/image_source/iPhone_captures"  # Replace with the directory path containing images
+            if img is None:
+                continue
+            cv2.imwrite(os.path.join(curr_directory,"image_source/iPhone_captures", filename), img)
+            directory = os.path.join(curr_directory, "image_source/iPhone_captures")  # Replace with the directory path containing images
             image_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith((".png",".jpg",".jpeg"))]  # Replace ".png" with the file extension of your images
             sorted_image_files = sorted(image_files, reverse=True)
             image_file = sorted_image_files[0]  # Keep only the last image
@@ -1024,8 +1075,8 @@ if __name__ == '__main__':
                 _, state, txt = bot.run_image(image, state, txt)
                 #print(f"Processed 1 image, Current state: {state}\nCurrent Memory: {bot.agent.memory.buffer}\n")
                 #bot.run_text(txt, state)
-                record_audio_to_file("/home/justanotherlad/Desktop/blindvisaidgpt/question_source/file1.wav", 5)
-                text = transcribe_audio_file("/home/justanotherlad/Desktop/blindvisaidgpt/question_source/file1.wav")
+                record_audio_to_file(os.path.join(curr_directory, "question_source/file1.wav"), 5)
+                text = transcribe_audio_file(os.path.join(curr_directory, "question_source/file1.wav"))
                 if text!=None:
                     bot.run_text(text, state)
 
