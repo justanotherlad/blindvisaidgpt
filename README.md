@@ -2,6 +2,12 @@
 An interactive aid for blind people using microsoft/visual-chatgpt
 #### (Originally motivated as a potential [Deep Hack](https://hasgeek.com/generativeAI/deep-hackathon/?utm_campaign=webshare) submission)
 
+```
+The ultimate aim is to have a WiFi enabled camera mounted on a glass for visually impaired people, to give them 
+an idea what they could possibly see in their visual-field, and to provide an interactive interface on top 
+of it so that they could ask questions about what they’re being told lies in front of them.
+```
+
 
 ### Demo
 
