@@ -1015,7 +1015,7 @@ class ConversationBot:
         engine.say(str(state[-1][1]))
         engine.runAndWait()
         """
-        tts.tts_to_file(text=str(state[-1][1]), file_path="/home/justanotherlad/Desktop/blindvisaidgpt/QnA_source/output.wav")
+        tts.tts_to_file(text=str(state[-1][1]), file_path="QnA_source/output.wav")
         audio_file = AudioSegment.from_wav('QnA_source/output.wav')
         play(audio_file)
         return state, state
@@ -1041,7 +1041,7 @@ class ConversationBot:
         engine.say("The last image is of"+str(description))
         engine.runAndWait()
         """
-        tts.tts_to_file(text="The last image is of"+str(description), file_path="/home/justanotherlad/Desktop/blindvisaidgpt/QnA_source/output.wav")
+        tts.tts_to_file(text="The last image is of"+str(description), file_path="QnA_source/output.wav")
         audio_file = AudioSegment.from_wav('QnA_source/output.wav')
         play(audio_file)
         self.agent.memory.buffer = self.agent.memory.buffer + Human_prompt + 'AI: ' + AI_prompt
