@@ -8,13 +8,16 @@ import uuid
 from PIL import Image
 import numpy as np
 import argparse
-import pyttsx3
+#import pyttsx3
 import time
 #import speech_recognition as sr
 import whisper
 import pyaudio
 import wave
 import warnings
+from TTS.api import TTS
+from pydub import AudioSegment
+from pydub.playback import play
 
 warnings.filterwarnings("ignore")
 
@@ -32,6 +35,10 @@ from langchain.agents.initialize import initialize_agent
 from langchain.agents.tools import Tool
 from langchain.chains.conversation.memory import ConversationBufferMemory
 from langchain.llms.openai import OpenAI
+
+
+tts = TTS(model_name="tts_models/en/ljspeech/tacotron2-DCA", progress_bar=False, gpu=False)
+
 
 
 VISUAL_CHATGPT_PREFIX = """Visual ChatGPT is designed to be able to assist with a wide range of text and visual related tasks, from answering simple questions to providing in-depth explanations and discussions on a wide range of topics. Visual ChatGPT is able to generate human-like text based on the input it receives, allowing it to engage in natural-sounding conversations and provide responses that are coherent and relevant to the topic at hand.
@@ -1003,9 +1010,14 @@ class ConversationBot:
         state = state + [(text, response)]
         print(f"\nProcessed run_text, Input text: {text}\nCurrent state: {state}\n"
               f"Current Memory: {self.agent.memory.buffer}")
+        """
         engine = pyttsx3.init()
         engine.say(str(state[-1][1]))
         engine.runAndWait()
+        """
+        tts.tts_to_file(text=str(state[-1][1]), file_path="/home/justanotherlad/Desktop/blindvisaidgpt/QnA_source/output.wav")
+        audio_file = AudioSegment.from_wav('QnA_source/output.wav')
+        play(audio_file)
         return state, state
 
     def run_image(self, image, state, txt):
@@ -1024,9 +1036,14 @@ class ConversationBot:
         description = self.models['ImageCaptioning'].inference(image_filename)
         Human_prompt = f'\nHuman: provide a figure named {image_filename}. The description is: {description}. This information helps you to understand this image, but you should use tools to finish following tasks, rather than directly imagine from my description. If you understand, say \"Received\". \n'
         AI_prompt = "Received.  "
+        """
         engine = pyttsx3.init()
         engine.say("The last image is of"+str(description))
         engine.runAndWait()
+        """
+        tts.tts_to_file(text="The last image is of"+str(description), file_path="/home/justanotherlad/Desktop/blindvisaidgpt/QnA_source/output.wav")
+        audio_file = AudioSegment.from_wav('QnA_source/output.wav')
+        play(audio_file)
         self.agent.memory.buffer = self.agent.memory.buffer + Human_prompt + 'AI: ' + AI_prompt
         state = state + [(f"![](/file={image_filename})*{image_filename}*", AI_prompt)]
         print(f"\nProcessed run_image, Input image: {image_filename}\nCurrent state: {state}\n"
@@ -1081,10 +1098,10 @@ if __name__ == '__main__':
                 _, state, txt = bot.run_image(image, state, txt)
                 #print(f"Processed 1 image, Current state: {state}\nCurrent Memory: {bot.agent.memory.buffer}\n")
                 #bot.run_text(txt, state)
-                record_audio_to_file(os.path.join(curr_directory, "question_source/file1.wav"), 5)
+                record_audio_to_file(os.path.join(curr_directory, "QnA_source/file1.wav"), 5)
                 #text = transcribe_audio_file(os.path.join(curr_directory, "question_source/file1.wav"))
-                model = whisper.load_model("tiny")
-                result = model.transcribe(os.path.join(curr_directory, "question_source/file1.wav"))
+                model = whisper.load_model("small")
+                result = model.transcribe(os.path.join(curr_directory, "QnA_source/file1.wav"))
                 if result["text"] != "" and "thank you" not in result["text"].lower():
                     bot.run_text(result["text"], state)
 
